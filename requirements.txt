@@ -1,0 +1,15 @@
+pandas
+numpy
+scikit-learn>=1.2
+xgboost
+matplotlib
+seaborn
+shap
+streamlit
+langchain
+openai
+plotly
+python-dotenv
+langchain-openai
+reportlab
+
