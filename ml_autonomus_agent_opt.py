@@ -173,7 +173,7 @@ def run_ml_pipeline_auto(df: pd.DataFrame, target_column: str, problem_type: str
                                                        random_state=21,
                                                        stratify=None if problem_type=='regression' else y)
     # Fit preprocessing en Train
-    print('Adjutando preprocessing en X_train...')
+    print('Ajustando preprocessing en X_train...')
     preprocessing.fit(X_train)
 
     # Transformamos para obtener arrays y nombre de features
@@ -201,19 +201,19 @@ def run_ml_pipeline_auto(df: pd.DataFrame, target_column: str, problem_type: str
     fitted_models = {}
 
     # Entrenamos y evaluamos
-    for name, model in model.items():
+    for name, model in models.items():
         print(f'Entrenamos {name}...')
         model.fit(X_train_proc, y_train)
         y_pred = model.predict(X_test_proc)
 
-        if problem_type == 'regresion':
+        if problem_type == 'regression':
             mse = mean_squared_error(y_test, y_pred)
             r2 = r2_score(y_test, y_pred)
             results[name] = {'MSE': mse, 'R2': r2}
         else:
             acc = accuracy_score(y_test, y_pred)
             f1 = f1_score(y_test, y_pred, average='weighted')
-            results[name] = {'accuracy': acc, 'f1': f1}
+            results[name] = {'Accuracy': acc, 'f1': f1}
         
         fitted_models[name] = model
         # Guardar modelo (modelo sin pipeline)
@@ -235,6 +235,30 @@ def run_ml_pipeline_auto(df: pd.DataFrame, target_column: str, problem_type: str
 
     return best_model_name, best_metrics, best_model, preprocessing, X_train_proc_df, X_test_proc_df, y_test
 
+
+# 6) EXPLICABILIDAD SHAP
+def compute_shap(model, X_proc_df, output_path='graphics/shap_summary.png'):
+    """
+    Calcula valores SHAP (aplicable para tree-based) y guarda summary plot.
+    Devuelve un breve resumen textual para el informe.
+    """
+
+    print('Calculando SHAP...')
+    try:
+        # TreeExplainer para modelos basados en arboles
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(X_proc_df)
+    except Exception:
+        # fallback shap.Explainer generico
+        explainer = shap.Explainer(model)
+        shap_values = explainer(X_proc_df)
+    
+    plt.figure(figsize=(10, 6))
+    shap.summary_plot(shap_values, X_proc_df, show=False)  # False para compatibilidad entre versiones
+    plt.tight_layout()
+    plt.savefig(output_path, bbox_inches='tight')
+    plt.close()
+    print(f'Gráfico SHAP guardado en: {output_path}')
 
 
 
