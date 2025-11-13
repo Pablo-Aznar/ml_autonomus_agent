@@ -124,7 +124,7 @@ def build_preprocessing_pipeline(df: pd.DataFrame, target_column: str):
     
     # Categóricas de baja cardinalidad: imputacion most_frequent + OneHot
     low_card_transformer = Pipeline(steps=[('imputer', SimpleImputer(strategy='most_frequent')),
-                                          ('onehot', OneHotEncoder(handle_unknown='ignore', sparse=False))])
+                                          ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False))])
     
     # Categóricas de alta cardinalidad: imputacion most_frequent + Ordinal
     high_card_transformer = Pipeline(steps=[('imputer', SimpleImputer(strategy='most_frequent')),
@@ -144,7 +144,7 @@ def build_preprocessing_pipeline(df: pd.DataFrame, target_column: str):
     return preprocessing, num_cols, low_card_cat, high_card_cat
 
 
-# 5) PIPELINE DE ENTRENIENTO AUTOMATICO (AutoML Full)
+# 5) PIPELINE DE ENTRENAMIENTO AUTOMATICO (AutoML Full)
 def run_ml_pipeline_auto(df: pd.DataFrame, target_column: str, problem_type: str=None):
     """
     Pipeline completamente automático:
@@ -165,6 +165,11 @@ def run_ml_pipeline_auto(df: pd.DataFrame, target_column: str, problem_type: str
     # Separamos X e y
     X = df.drop(columns=[target_column])
     y = df[target_column]
+
+    # Si es clasificación y y tiene valores numéricos no 0-indexados, los normalizamos
+    if problem_type == 'classification':
+        if y.dtype != 'O':  # solo si no es categórica tipo string
+            y = y.astype(int) - y.min()
 
     # Split
     X_train, X_test, y_train, y_test= train_test_split(X,
@@ -259,6 +264,83 @@ def compute_shap(model, X_proc_df, output_path='graphics/shap_summary.png'):
     plt.savefig(output_path, bbox_inches='tight')
     plt.close()
     print(f'Gráfico SHAP guardado en: {output_path}')
+
+    # generamos texto resumen sencillo
+    shap_text = "Se calculó SHAP para identificar características con mayor influencia en las predicciones."
+    return shap_text
+
+
+# 7) GENERACIÓN DE TEXTO CON IA (OpenAI Chat)
+def generate_text_report_openai(model_name, metrics, shap_text, eda_path, problem_type):
+    """
+    Genera un informe de texto usando la API de OpenAI
+    con comentarios inline que explican cada paso
+    """
+
+    # 7.1) Creamos el prompt para dar estructura al informe
+    prompt = f"""
+    Eres un experto en ciencia de datos. Redacta un informe técnico claro y profesional con el siguiente contenido:
+
+    - Tipo de problema: {problem_type}
+    - Mejor modelo: {model_name}
+    - Métricas: {metrics}
+    - Resumen SHAP: {shap_text}
+    - Ruta del EDA: {eda_path}
+
+        
+    Estructura el informe en secciones numeradas:
+    1) Introducción breve
+    2) Análisis exploratorio (puntos clave)
+    3) Modelado (qué modelos se probaron y por qué)
+    4) Métricas y evaluación
+    5) Interpretabilidad y puntos de acción
+    6) Conclusiones y recomendaciones prácticas
+
+    Escribe es español, con frases claras y sin incluir código. Usa un tono técnico-profesional y conciso
+    """
+
+    # 7.2) Llamada a la API de OpenAI 
+    # Usamos ChatCompletion para generar texto; el modelo puede variar según disponibilidad (gpt-4o-mini o similar)
+    response = openai.ChatCompletion.create(model='gpt-4o-mini',  # client.chat.completions.create
+                                            messages=[{'role':'user', 'content': prompt}],
+                                            temperature=0.3,
+                                            max_tokens=1000)
+    
+    text = response['choices'][0]['message']['content']  # response.choices[0].message.content
+    print('Texto generado por IA (Open AI)')
+    return text
+
+
+# 9) EJECUCIÓN DEL SCRIPT (AutoML Full)
+def main():
+    print("\n=== ml_autonomus_agent: AutoML Full ===\n")
+
+    # Entradas
+    data_path = input('Ruta del dataset CSV (ej: data/raw/winequality-red.csv:').strip()
+    target_column = input('Nombre de la variable objetivo (target):').strip()
+
+    # 9.1) Carga del dataset
+    df = load_user_dataset(data_path)
+
+    # 9.2) EDA automático (ydata-profiling)
+    eda_path = generate_eda_report(df, output_html='reports/EDA_report.html')
+
+    # 9.3) Pipeline AutoML Full (detecta tipo problema, preprocessing automático, entrenar modelos)
+    best_model_name, best_metrics, best_model, preprocessing, X_train_proc_df, X_test_proc_df, y_test = run_ml_pipeline_auto(
+        df, target_column, problem_type=None)
+    
+    # 9.4) Explicabilidad SHAP
+    shap_img = "graphics/shap_summary.png"
+    shap_text = compute_shap(best_model, X_test_proc_df, shap_img)
+
+    # 9.5) Generación de texto con IA (OpenAI)
+    report_text = generate_text_report_openai(best_model_name, best_metrics, shap_text, eda_path, problem_type=detect_problem_type(df[target_column]))
+
+
+if __name__ == '__main__':
+    main()
+
+
 
 
 
