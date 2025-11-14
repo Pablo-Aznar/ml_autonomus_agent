@@ -311,6 +311,60 @@ def generate_text_report_openai(model_name, metrics, shap_text, eda_path, proble
     return text
 
 
+# 8) GENERAR PDF (ReportLab)
+def generate_pdf_report(text: str, shap_img_path: str, model_name: str, metrics: dict, problem_type: str, output_pdf: str='reports/ml_report.pdf'):
+    """
+    Genera un PDF profesional con:
+    - Título y metadata
+    - Texto generado por IA (limpio de Markdown)
+    - Salto de página con gráfico SHAP
+    Comentarios inline describen las transformaciones.
+    """
+    os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
+
+    # 8.1) Configuramos documento y estilos
+    doc = SimpleDocTemplate(output_pdf, pagesize=A4)
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name="BodyTextJustify", parent=styles["BodyText"], alignment=TA_JUSTIFY))
+    styles.add(ParagraphStyle(name="SectionTitle", parent=styles["Heading2"], spaceBefore=12, spaceAfter=6))
+    elements = []
+
+    # 8.2) Título y metadata
+    title = f'Informe automático - Modelo: {model_name}'
+    elements.append(Paragraph(title, styles['Title']))
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph(f'<b>Tipo de problema:<b> {problem_type}', styles['Normal']))
+    elements.append(Paragraph(f"<b>Métricas:</b> {metrics}", styles["Normal"]))
+    elements.append(Spacer(1, 12))
+
+    # 8.3) Limpieza del texto generado por la IA (quitar Markdown)
+    clean_text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)   # eliminar negritas Markdown
+    clean_text = re.sub(r"#+", "", clean_text)           # eliminar encabezados Markdown
+    clean_text = re.sub(r"_([^_]+)_", r"\1", clean_text) # quitar cursivas
+    # Separar por doble salto de línea para mantener párrafos
+    paragraphs = re.split(r'\n\s*\n', clean_text)
+    paragraphs = [p.strip() for p in paragraphs if p.strip()]
+
+    # 8.4) Añadir párrafos formateados
+    for p in paragraphs:
+        elements.append(Paragraph(p, styles["BodyTextJustify"]))
+        elements.append(Spacer(1, 8))
+
+    # 8.5) Salto de página y gráfico SHAP en página aparte
+    elements.append(PageBreak())
+    elements.append(Paragraph("Importancia de características (SHAP)", styles["SectionTitle"]))
+    elements.append(Spacer(1, 12))
+    if os.path.exists(shap_img_path):
+        # Insertar imagen y ajustarla
+        elements.append(Image(shap_img_path, width=6 * inch, height=4 * inch))
+    else:
+        elements.append(Paragraph("⚠️ No se encontró el gráfico SHAP.", styles["Normal"]))
+    
+    # 8.6) Guardar PDF
+    doc.build(elements)
+    print(f"PDF generado y guardado en: {output_pdf}")
+
+
 # 9) EJECUCIÓN DEL SCRIPT (AutoML Full)
 def main():
     print("\n=== ml_autonomus_agent: AutoML Full ===\n")
@@ -336,6 +390,14 @@ def main():
     # 9.5) Generación de texto con IA (OpenAI)
     report_text = generate_text_report_openai(best_model_name, best_metrics, shap_text, eda_path, problem_type=detect_problem_type(df[target_column]))
 
+    # 6) Generación del PDF final
+    generate_pdf_report(report_text, shap_img, best_model_name, best_metrics, detect_problem_type(df[target_column]), output_pdf="reports/ml_report.pdf")
+
+    print("\nProceso finalizado. Archivos generados:")
+    print("- EDA HTML:", eda_path)
+    print("- SHAP image:", shap_img)
+    print("- PDF report: reports/ml_report.pdf")
+    print("- Model saved in models/ (model .pkl and preprocessing_pipeline.pkl)")
 
 if __name__ == '__main__':
     main()
