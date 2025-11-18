@@ -1,8 +1,8 @@
-from data_utils.dataset_loader_EDA_generator import load_user_dataset, generate_eda_report, detect_problem_type
-from data_utils.automl_pipeline import run_ml_pipeline_auto
-from data_utils.explainability import compute_shap
-from data_utils.text_generator import generate_text_report_openai
-from data_utils.pdf_generator import generate_pdf_report
+from utils.dataset_loader_EDA_generator import load_user_dataset, generate_eda_report, detect_problem_type
+from utils.automl_pipeline import run_ml_pipeline_auto
+from utils.explainability import compute_shap
+from utils.text_generator import generate_text_report_openai
+from utils.pdf_generator import generate_pdf_report
 
 def main():
     print("\n=== AutoML – ML Autonomous Agent ===\n")

@@ -32,3 +32,7 @@ def generate_eda_report(df: pd.DataFrame, output_html: str = 'reports/EDA_report
     profile.to_file(output_html)
     print(f'EDA guardado en {output_html}')
     return output_html
+
+# Abrir html en servidor local para visualizar todos los desplegable
+# python -m http.server 8000
+# http://localhost:8000/reports/EDA_report.html
