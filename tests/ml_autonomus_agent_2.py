@@ -22,7 +22,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import shap
-import openai
+from openai import OpenAI
 from datetime import datetime
 
 # SKLearn
@@ -50,8 +50,8 @@ from reportlab.lib.units import inch
 # Cargar variables de entorno
 from dotenv import load_dotenv
 load_dotenv()
-openai.api_key = os.getenv('OPENAI_API_KEY')
-if not openai.api_key:
+OpenAI.api_key = os.getenv('OPENAI_API_KEY')
+if not OpenAI.api_key:
     raise ValueError('No se encontró OPENAI_API_KEY en el archivo .env')
 
 # Creamos carpetas necesarias
@@ -238,7 +238,7 @@ def run_ml_pipeline_auto(df: pd.DataFrame, target_column: str, problem_type: str
     # Guardar preprocessing por separado
     joblib.dump(preprocessing, f'models/preprocessing_pipeline.pkl')
 
-    return best_model_name, best_metrics, best_model, preprocessing, X_train_proc_df, X_test_proc_df, y_test
+    return best_model_name, best_metrics, best_model, preprocessing, X_train_proc_df, X_test_proc_df, y_test, models
 
 
 # 6) EXPLICABILIDAD SHAP
@@ -271,17 +271,19 @@ def compute_shap(model, X_proc_df, output_path='graphics/shap_summary.png'):
 
 
 # 7) GENERACIÓN DE TEXTO CON IA (OpenAI Chat)
-def generate_text_report_openai(model_name, metrics, shap_text, eda_path, problem_type):
+def generate_text_report_openai(model_name, metrics, shap_text, eda_path, problem_type, models):
     """
     Genera un informe de texto usando la API de OpenAI
     con comentarios inline que explican cada paso
     """
 
-    # 7.1) Creamos el prompt para dar estructura al informe
+    # 7.1) Inicializamos el cliente y creamos el prompt para dar estructura al informe
+    client = OpenAI()
     prompt = f"""
     Eres un experto en ciencia de datos. Redacta un informe técnico claro y profesional con el siguiente contenido:
 
     - Tipo de problema: {problem_type}
+    - Modelos utilizados: {models}
     - Mejor modelo: {model_name}
     - Métricas: {metrics}
     - Resumen SHAP: {shap_text}
@@ -300,69 +302,96 @@ def generate_text_report_openai(model_name, metrics, shap_text, eda_path, proble
     """
 
     # 7.2) Llamada a la API de OpenAI 
-    # Usamos ChatCompletion para generar texto; el modelo puede variar según disponibilidad (gpt-4o-mini o similar)
-    response = openai.ChatCompletion.create(model='gpt-4o-mini',  # client.chat.completions.create
-                                            messages=[{'role':'user', 'content': prompt}],
-                                            temperature=0.3,
-                                            max_tokens=1000)
+    # Llamada correcta al endpoint chat.completions
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "Eres un experto en machine learning y MLOps."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.3,
+        max_tokens=1000
+    )
     
-    text = response['choices'][0]['message']['content']  # response.choices[0].message.content
+    text = response.choices[0].message.content  # response.choices[0].message.content
     print('Texto generado por IA (Open AI)')
     return text
 
 
 # 8) GENERAR PDF (ReportLab)
-def generate_pdf_report(text: str, shap_img_path: str, model_name: str, metrics: dict, problem_type: str, output_pdf: str='reports/ml_report.pdf'):
+def generate_pdf_report(text: str, shap_img_path: str, model_name: str, metrics: dict, problem_type: str, output_pdf: str='reports/ml_report3.pdf'):
     """
     Genera un PDF profesional con:
     - Título y metadata
-    - Texto generado por IA (limpio de Markdown)
-    - Salto de página con gráfico SHAP
-    Comentarios inline describen las transformaciones.
+    - Texto generado por IA (con saltos de línea correctos)
+    - Gráfico SHAP en una página aparte
+    - Espaciado mejorado usando Spacer()
     """
+
+    # Crear directorio si no existe
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
 
-    # 8.1) Configuramos documento y estilos
+    # === CONFIGURACIÓN DE DOCUMENTO ===
     doc = SimpleDocTemplate(output_pdf, pagesize=A4)
+
     styles = getSampleStyleSheet()
-    styles.add(ParagraphStyle(name="BodyTextJustify", parent=styles["BodyText"], alignment=TA_JUSTIFY))
-    styles.add(ParagraphStyle(name="SectionTitle", parent=styles["Heading2"], spaceBefore=12, spaceAfter=6))
+    styles.add(ParagraphStyle(
+        name="BodyTextJustify",
+        parent=styles["BodyText"],
+        alignment=TA_JUSTIFY,
+        leading=16   # Espaciado entre líneas
+    ))
+
+    styles.add(ParagraphStyle(
+        name="SectionTitle",
+        parent=styles["Heading2"],
+        spaceBefore=14,
+        spaceAfter=10
+    ))
+
     elements = []
 
-    # 8.2) Título y metadata
+    # === 1. TITULO Y METADATA ===
     title = f'Informe automático - Modelo: {model_name}'
     elements.append(Paragraph(title, styles['Title']))
-    elements.append(Spacer(1, 8))
-    elements.append(Paragraph(f'<b>Tipo de problema:<b> {problem_type}', styles['Normal']))
-    elements.append(Paragraph(f"<b>Métricas:</b> {metrics}", styles["Normal"]))
     elements.append(Spacer(1, 12))
 
-    # 8.3) Limpieza del texto generado por la IA (quitar Markdown)
-    clean_text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)   # eliminar negritas Markdown
-    clean_text = re.sub(r"#+", "", clean_text)           # eliminar encabezados Markdown
+    elements.append(Paragraph(f'<b>Tipo de problema:</b> {problem_type}', styles['Normal']))
+    elements.append(Paragraph(f"<b>Métricas:</b> {metrics}", styles["Normal"]))
+    elements.append(Spacer(1, 18))
+
+
+    # === 2. LIMPIEZA DEL TEXTO GENERADO POR IA ===
+    clean_text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)   # quitar **negrita**
+    clean_text = re.sub(r"#+", "", clean_text)           # quitar markdown headers
     clean_text = re.sub(r"_([^_]+)_", r"\1", clean_text) # quitar cursivas
-    # Separar por doble salto de línea para mantener párrafos
-    paragraphs = re.split(r'\n\s*\n', clean_text)
-    paragraphs = [p.strip() for p in paragraphs if p.strip()]
 
-    # 8.4) Añadir párrafos formateados
-    for p in paragraphs:
-        elements.append(Paragraph(p, styles["BodyTextJustify"]))
-        elements.append(Spacer(1, 8))
+    # Dividimos usando los saltos de línea del modelo
+    lines = clean_text.split("\n")
 
-    # 8.5) Salto de página y gráfico SHAP en página aparte
+    # === 3. AGREGAR TEXTO AL PDF CON SALTOS REALES ===
+    for line in lines:
+        if line.strip() == "":
+            elements.append(Spacer(1, 14))  # salto extra para separar apartados
+        else:
+            elements.append(Paragraph(line.strip(), styles["BodyTextJustify"]))
+            elements.append(Spacer(1, 10))  # espacio después de cada párrafo
+
+
+    # === 4. SALTO DE PÁGINA PARA EL SHAP ===
     elements.append(PageBreak())
     elements.append(Paragraph("Importancia de características (SHAP)", styles["SectionTitle"]))
-    elements.append(Spacer(1, 12))
+    elements.append(Spacer(1, 14))
+
     if os.path.exists(shap_img_path):
-        # Insertar imagen y ajustarla
         elements.append(Image(shap_img_path, width=6 * inch, height=4 * inch))
     else:
         elements.append(Paragraph("⚠️ No se encontró el gráfico SHAP.", styles["Normal"]))
-    
-    # 8.6) Guardar PDF
+
+
+    # === 5. GENERAR PDF ===
     doc.build(elements)
-    print(f"PDF generado y guardado en: {output_pdf}")
+    print(f"PDF generado correctamente en: {output_pdf}")
 
 
 # 9) EJECUCIÓN DEL SCRIPT (AutoML Full)
@@ -380,7 +409,7 @@ def main():
     eda_path = generate_eda_report(df, output_html='reports/EDA_report.html')
 
     # 9.3) Pipeline AutoML Full (detecta tipo problema, preprocessing automático, entrenar modelos)
-    best_model_name, best_metrics, best_model, preprocessing, X_train_proc_df, X_test_proc_df, y_test = run_ml_pipeline_auto(
+    best_model_name, best_metrics, best_model, preprocessing, X_train_proc_df, X_test_proc_df, y_test, models = run_ml_pipeline_auto(
         df, target_column, problem_type=None)
     
     # 9.4) Explicabilidad SHAP
@@ -388,10 +417,10 @@ def main():
     shap_text = compute_shap(best_model, X_test_proc_df, shap_img)
 
     # 9.5) Generación de texto con IA (OpenAI)
-    report_text = generate_text_report_openai(best_model_name, best_metrics, shap_text, eda_path, problem_type=detect_problem_type(df[target_column]))
+    report_text = generate_text_report_openai(best_model_name, best_metrics, shap_text, eda_path, problem_type=detect_problem_type(df[target_column]), models=models)
 
-    # 6) Generación del PDF final
-    generate_pdf_report(report_text, shap_img, best_model_name, best_metrics, detect_problem_type(df[target_column]), output_pdf="reports/ml_report.pdf")
+    # 9.6) Generación del PDF final
+    generate_pdf_report(report_text, shap_img, best_model_name, best_metrics, detect_problem_type(df[target_column]), output_pdf="reports/ml_report3.pdf")
 
     print("\nProceso finalizado. Archivos generados:")
     print("- EDA HTML:", eda_path)
