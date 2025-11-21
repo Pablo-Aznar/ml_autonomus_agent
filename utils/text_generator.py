@@ -10,7 +10,7 @@ if not OpenAI.api_key:
     part2 = os.getenv("OPENAI_API_KEY_PART2", "")
     if not part1 or not part2:
         raise ValueError("Falta OPENAI_API_KEY o las dos partes (PART1 + PART2)")
-    api_key = part1 + part2
+    OpenAI.api_key = part1 + part2
 
 
 def generate_text_report_openai(model_name, metrics, shap_text, eda_path, problem_type, models):
