@@ -17,8 +17,18 @@ __pycache__/
 .vscode/
 
 # Archivos de datos
-data/
+data/raw/
 graphics/
 models/
 reports/
 tests/
+
+# === Archivos generados por FastAPI o ML ===
+*.pkl
+*.joblib
+*.json
+*.sqlite
+*.db
+*.html
+*.pdf
+*.png

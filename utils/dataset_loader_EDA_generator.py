@@ -1,5 +1,6 @@
 import pandas as pd
 from ydata_profiling import ProfileReport  # EDA Automatico
+import chardet
 
 # 1) Detecta el tipo de problema
 def detect_problem_type(y: pd.Series) -> str:
@@ -18,10 +19,48 @@ def detect_problem_type(y: pd.Series) -> str:
 
 
 # 2) Carga del DATASET
-def load_user_dataset(path: str) -> pd.DataFrame:  #Type hints
-    df = pd.read_csv(path)
-    print(f'Dataset cargado: {path} con {df.shape[0]} filas y {df.shape[1]} columnas')
+def load_user_dataset(path: str):
+    """
+    Carga un CSV del usuario limpiando los nombres de columnas:
+    - Detecta encoding automáticamente
+    - Intenta detectar separador automáticamente (para evitar 1 sola columna)
+    - Elimina BOM/UTF-8
+    - Convierte columnas a minúsculas
+    - Quita espacios y caracteres raros
+    """
+
+    # Detectar encoding automáticamente
+    with open(path, "rb") as f:
+        raw = f.read()
+        enc = chardet.detect(raw)["encoding"]
+
+    # --- Intento inteligente de carga ---
+    try:
+        # Detectar automáticamente separador
+        df = pd.read_csv(path, encoding=enc, sep=None, engine="python")
+    except Exception:
+        # Si falla, intentar con coma
+        try:
+            df = pd.read_csv(path, encoding=enc, sep=",")
+        except Exception:
+            # Último fallback: separador ;
+            df = pd.read_csv(path, encoding=enc, sep=";")
+
+    # Normalizar columnas
+    df.columns = (
+        df.columns
+        .str.encode('utf-8', 'ignore').str.decode('utf-8')
+        .str.replace(r"[^\w\s]", "", regex=True)  # quitar símbolos extraños
+        .str.strip()
+        .str.lower()
+        .str.replace(" +", "_", regex=True)
+    )
+
+    print("\n🔍 Columnas detectadas tras normalización:")
+    print(df.columns.tolist())
+
     return df
+
 
 
 # 3) EDA Automático (ydata-profiling)

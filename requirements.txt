@@ -13,4 +13,10 @@ python-dotenv
 langchain-openai
 reportlab
 ydata-profiling  # EDA Automático
-
+chardet
+ 
+# WEB APP
+fastapi
+uvicorn[standard]
+jinja2
+python-multipart
