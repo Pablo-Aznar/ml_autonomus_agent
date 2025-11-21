@@ -35,4 +35,6 @@ def main():
         detect_problem_type(df[target_column]))
 
 if __name__ == "__main__":
-    main()
+    import uvicorn
+    port = int(os.getenv("PORT", 8000))  # Usa $PORT de Railway o 8000 local
+    uvicorn.run("web_app:app", host="0.0.0.0", port=port, reload=True)

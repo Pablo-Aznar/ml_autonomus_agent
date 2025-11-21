@@ -36,10 +36,10 @@ def run_ml_pipeline_auto(df, target_column, problem_type=None):
     y = df[target_column]
 
     # --------------------------------------------------------
-    # 🔥 NUEVO: Codificación correcta del target categórico
+    # Codificación correcta del target categórico
     # --------------------------------------------------------
     label_encoder = None
-# CODIFICACIÓN OBLIGATORIA DE ETIQUETAS PARA CLASIFICACIÓN (SIEMPRE de 0 a n-1)
+    # CODIFICACIÓN OBLIGATORIA DE ETIQUETAS PARA CLASIFICACIÓN (SIEMPRE de 0 a n-1)
     if problem_type == "classification":
         print("→ Aplicando codificación forzada de etiquetas [0, 1, 2, ...] para clasificación...")
         label_encoder = LabelEncoder()
