@@ -11,6 +11,7 @@ __pycache__/
 # Archivos de entorno y configuración
 .env
 .DS_Store
+Procfile
 
 # Archivos de sistema o IDE
 .idea/
