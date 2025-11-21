@@ -1,0 +1,40 @@
+<!-- templates/index.html -->
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>ML Autonomous Agent — Web UI (MVP)</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 30px; }
+    .card { border: 1px solid #eee; padding: 18px; border-radius: 8px; max-width: 800px; }
+    input[type=file] { display:block; margin-bottom:10px; }
+    .jobs { margin-top:20px; }
+    a.job { display:block; margin-bottom:6px; }
+  </style>
+</head>
+<body>
+  <h1>ML Autonomous Agent — MVP</h1>
+
+  <div class="card">
+    <h3>1) Subir dataset CSV</h3>
+    <form action="/start" enctype="multipart/form-data" method="post">
+      <label>Archivo CSV: <input name="file" type="file" accept=".csv" required></label>
+      <br/>
+      <label>Variable objetivo (target): <input name="target" type="text" placeholder="e.g. income or quality" required></label>
+      <br/><br/>
+      <button type="submit">Iniciar pipeline</button>
+    </form>
+  </div>
+
+  <div class="card jobs">
+    <h3>Jobs recientes</h3>
+    {% if jobs %}
+      {% for id, job in jobs.items() %}
+        <a class="job" href="/status/{{id}}">Job {{id}} — {{ job.status }}</a>
+      {% endfor %}
+    {% else %}
+      <p>No hay jobs todavía.</p>
+    {% endif %}
+  </div>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!-- templates/status.html — VERSIÓN FINAL MVP (21/11/2025) -->
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Job {{job_id}} | ML Autonomous Agent</title>
+  <meta http-equiv="refresh" content="6">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background:#f9f9f9; }
+    .card { background:white; padding:25px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1); max-width:900px; margin:0 auto; }
+    pre { background:#f7f7f7; padding:15px; border-radius:8px; max-height:500px; overflow-y:auto; font-size:14px; }
+    .links a { margin-right:20px; font-weight:bold; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Job {{ job_id }}</h1>
+
+    {% if not job %}
+      <p>Job no encontrado.</p>
+    {% else %}
+
+      {% if job.status == "completed" %}
+        <div style="background:#d4edda; padding:15px; border-radius:8px; border-left:6px solid #28a745;">
+          <h3 style="margin:0; color:#155724;">¡COMPLETADO CON ÉXITO!</h3>
+        </div>
+      {% elif job.status == "failed" %}
+        <div style="background:#f8d7da; padding:15px; border-radius:8px; border-left:6px solid #dc3545;">
+          <h3 style="margin:0; color:#721c24;">ERROR EN EL PROCESO</h3>
+        </div>
+      {% else %}
+        <div style="background:#fff3cd; padding:15px; border-radius:8px; border-left:6px solid #ffc107;">
+          <p style="margin:0;"><strong>{{ job.status|upper }}</strong> — Procesando... (actualiza cada 6s)</p>
+        </div>
+      {% endif %}
+
+      <h3 style="margin-top:25px;">Log en tiempo real</h3>
+      <pre>{% for m in job.messages %}{{ m }}
+{% endfor %}</pre>
+
+      {% if job.status == "completed" %}
+        <h3>Resultados</h3>
+        <div class="links">
+          <a href="/reports/EDA_report_{{job_id}}.html" target="_blank">Ver EDA Interactivo</a>
+          <a href="/graphics/shap_{{job_id}}.png" target="_blank">Ver Gráfico SHAP</a>
+          <a href="/download/pdf/{{job_id}}" target="_blank">Descargar Informe PDF</a>
+        </div>
+      {% endif %}
+
+      {% if job.status == "failed" %}
+        <p style="color:#721c24;">Revisa el log. Posibles errores: nombre de columna mal escrito, CSV dañado, etc.</p>
+      {% endif %}
+
+    {% endif %}
+
+    <br><br>
+    <a href="/">Volver al inicio</a>
+  </div>
+</body>
+</html>

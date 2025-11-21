@@ -29,6 +29,5 @@ tests/
 *.json
 *.sqlite
 *.db
-*.html
 *.pdf
 *.png
