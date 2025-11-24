@@ -3,31 +3,11 @@ import os
 
 # Cargar variables de entorno
 from dotenv import load_dotenv
-# Cargar .env solo en local
 load_dotenv()
-
-# === INTENTA USAR LA CLAVE NORMAL ===
 OpenAI.api_key = os.getenv('OPENAI_API_KEY')
+if not OpenAI.api_key:
+    raise ValueError('No se encontró OPENAI_API_KEY en el archivo .env')
 
-# === SI ESTÁ VACÍA O CORTADA (Railway bug), LA RECONSTRUIMOS CON LAS DOS PARTES ===
-if not OpenAI.api_key or len(OpenAI.api_key) < 80 or "****" in OpenAI.api_key:
-    part1 = os.getenv("OPENAI_API_KEY_PART1", "")
-    part2 = os.getenv("OPENAI_API_KEY_PART2", "")
-    if part1 and part2:
-        full_key = part1 + part2
-        print(f"[OpenAI] Clave truncada detectada → reconstruida ({len(full_key)} caracteres)")
-        OpenAI.api_key = full_key
-    else:
-        raise ValueError(
-            "OPENAI_API_KEY no encontrada o truncada, y no hay PART1 + PART2 para reconstruirla.\n"
-            "→ Local: ponla en .env\n"
-            "→ Railway: crea OPENAI_API_KEY_PART1 y OPENAI_API_KEY_PART2"
-        )
-
-# Verificación final (opcional, para debug)
-if not OpenAI.api_key or not OpenAI.api_key.startswith("sk-"):
-    raise ValueError("OPENAI_API_KEY inválida o vacía después de intentar arreglarla")
-    
 
 def generate_text_report_openai(model_name, metrics, shap_text, eda_path, problem_type, models):
     client = OpenAI()
