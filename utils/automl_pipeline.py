@@ -10,7 +10,6 @@ from sklearn.preprocessing import LabelEncoder
 from utils.dataset_loader_EDA_generator import detect_problem_type
 from utils.preprocessing import build_preprocessing_pipeline
 
-
 def run_ml_pipeline_auto(df, target_column, problem_type=None):
     """
     AutoML pipeline:
@@ -39,7 +38,7 @@ def run_ml_pipeline_auto(df, target_column, problem_type=None):
     # Codificación correcta del target categórico
     # --------------------------------------------------------
     label_encoder = None
-    # CODIFICACIÓN OBLIGATORIA DE ETIQUETAS PARA CLASIFICACIÓN (SIEMPRE de 0 a n-1)
+    # CODIFICACIÓN OBLIGATORIA DE ETIQUETAS PARA CLASIFICACIÓN
     if problem_type == "classification":
         print("→ Aplicando codificación forzada de etiquetas [0, 1, 2, ...] para clasificación...")
         label_encoder = LabelEncoder()

@@ -12,17 +12,21 @@ __pycache__/
 .env
 .DS_Store
 Procfile
+Dockerfile
 
 # Archivos de sistema o IDE
 .idea/
 .vscode/
 
-# Archivos de datos
-data/raw/
+# Archivos de datos, modelos, graficos e informes
+data/
 graphics/
 models/
 reports/
 tests/
+
+# Repositorio HF Spaces
+ml-autonomous-agent/
 
 # === Archivos generados por FastAPI o ML ===
 *.pkl
