@@ -9,7 +9,7 @@ def compute_shap(model, X_proc_df: pd.DataFrame, output_path: str = "graphics/sh
     """
     SHAP 100% compatible con XGBoost 2.0+, scikit-learn 1.4+ y Python 3.11+
     """
-    print("Calculando SHAP (versión ultra-robusta 2025)...")
+    print("Calculando SHAP..")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     # MUESTREO para velocidad (máximo 1000 filas)
@@ -27,14 +27,14 @@ def compute_shap(model, X_proc_df: pd.DataFrame, output_path: str = "graphics/sh
         print("SHAP calculado con Explainer (rápido y exacto)")
 
     except Exception as e1:
-        print(f"Explainer falló ({e1}), intentando con LinearExplainer para XGBoost...")
+        print(f"Explainer falló, intentando con LinearExplainer para XGBoost...")
         try:
             # OPCIÓN 2: LinearExplainer (funciona perfecto con XGBoost en clasificación)
             explainer = shap.LinearExplainer(model, X_sample)
             shap_values = explainer(X_sample)
             print("SHAP calculado con LinearExplainer")
         except Exception as e2:
-            print(f"Linear falló ({e2}), fallback a KernelExplainer simplificado...")
+            print(f"Linear falló, fallback a KernelExplainer simplificado...")
             # OPCIÓN 3: Kernel pero solo para 100 filas
             background = shap.sample(X_proc_df, 50)
             explainer = shap.KernelExplainer(
@@ -43,7 +43,7 @@ def compute_shap(model, X_proc_df: pd.DataFrame, output_path: str = "graphics/sh
                 nsamples=100
             )
             shap_values = explainer.shap_values(X_sample.head(100))
-            print("SHAP calculado con KernelExplainer (lento pero seguro)")
+            print("SHAP calculado con KernelExplainer")
 
     # Extraer valores SHAP (para clasificación binaria)
     if isinstance(shap_values, list):
@@ -63,7 +63,8 @@ def compute_shap(model, X_proc_df: pd.DataFrame, output_path: str = "graphics/sh
     plt.tight_layout()
     plt.savefig(output_path, dpi=150, bbox_inches='tight')
     plt.close()
-    print(f"Gráfico SHAP guardado: {output_path}")
+    #print(f"Gráfico SHAP guardado: {output_path}")
+    print("=== FIN AUTO-ML PIPELINE ===\n")
 
     # Resumen textual
     mean_abs_shap = np.abs(shap_values).mean(axis=0)

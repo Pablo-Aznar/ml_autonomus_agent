@@ -116,8 +116,7 @@ def run_ml_pipeline_auto(df, target_column, problem_type=None):
 
     print(f"\n→ Mejor modelo: {best_model_name}")
     print("→ Métricas del mejor modelo:", results[best_model_name])
-    print("=== FIN AUTO-ML PIPELINE ===\n")
-
+    
     return (best_model_name,
             results[best_model_name],
             fitted_models[best_model_name],

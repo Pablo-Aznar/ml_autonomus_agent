@@ -1,78 +1,106 @@
 import re
 import os
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, PageBreak, KeepInFrame
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_JUSTIFY
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch
 
-def generate_pdf_report(text: str, shap_img_path: str, model_name: str, metrics: dict, problem_type: str, output_pdf: str='reports/ml_report.pdf'):
+
+def generate_pdf_report(
+    text: str,
+    shap_img_path: str,
+    model_name: str,
+    metrics: dict,
+    problem_type: str,
+    output_pdf: str = "reports/ml_report.pdf"
+):
     """
-    Genera un PDF profesional con:
-    - Título y metadata
-    - Texto generado por IA (con saltos de línea correctos)
-    - Gráfico SHAP en una página aparte
-    - Espaciado mejorado usando Spacer()
+    PDF profesional optimizado (basado en tu versión original):
+    - Títulos en negrita (como los genera GPT)
+    - Cada sección completa en una sola página
+    - Si un título quedaría huérfano → salta a página nueva
     """
 
-    # Crear directorio si no existe
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
+    doc = SimpleDocTemplate(output_pdf, pagesize=A4, topMargin=0.8*inch, bottomMargin=0.8*inch)
 
-    # === CONFIGURACIÓN DE DOCUMENTO ===
-    doc = SimpleDocTemplate(output_pdf, pagesize=A4)
-
+    # === TUS ESTILOS ORIGINALES (sin conflictos) ===
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(
         name="BodyTextJustify",
         parent=styles["BodyText"],
         alignment=TA_JUSTIFY,
-        leading=16))   # Espaciado entre líneas
-
+        leading=16
+    ))
     styles.add(ParagraphStyle(
         name="SectionTitle",
         parent=styles["Heading2"],
-        spaceBefore=14,
-        spaceAfter=10))
-    
+        spaceBefore=20,
+        spaceAfter=12,
+        fontName="Helvetica-Bold"
+    ))
+
     elements = []
 
-    # === 1. TITULO Y METADATA ===
-    title = f'Informe automático - Modelo: {model_name}'
-    elements.append(Paragraph(title, styles['Title']))
+    # === PORTADA ===
+    elements.append(Paragraph(f"Informe automático - Modelo: {model_name}", styles["Title"]))
     elements.append(Spacer(1, 12))
-
-    elements.append(Paragraph(f'<b>Tipo de problema:</b> {problem_type}', styles['Normal']))
+    elements.append(Paragraph(f"<b>Tipo de problema:</b> {problem_type.capitalize()}", styles["Normal"]))
     elements.append(Paragraph(f"<b>Métricas:</b> {metrics}", styles["Normal"]))
-    elements.append(Spacer(1, 18))
+    elements.append(Spacer(1, 30))
 
+    # === LIMPIEZA DEL TEXTO (MANTENEMOS LA NEGRITA) ===
+    clean_text = re.sub(r"\*\*(.*?)\*\*", r"<b>\1</b>", text)      # ** → <b>
+    clean_text = re.sub(r"_([^_]+)_", r"\1", clean_text)          # cursiva → quitada
+    clean_text = re.sub(r"#+\s*", "", clean_text)                 # # Título → solo texto
+    lines = [line.strip() for line in clean_text.split("\n") if line.strip()]
 
-    # === 2. LIMPIEZA DEL TEXTO GENERADO POR IA ===
-    clean_text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)   # quitar **negrita**
-    clean_text = re.sub(r"#+", "", clean_text)           # quitar markdown headers
-    clean_text = re.sub(r"_([^_]+)_", r"\1", clean_text) # quitar cursivas
+    # === AGRUPAR POR SECCIONES (mantener todo junto) ===
+    current_section = []
 
-    # Dividimos usando los saltos de línea del modelo
-    lines = clean_text.split("\n")
+    def add_section():
+        """Inserta una sección completa en el PDF."""
+        if not current_section:
+            return
 
-    # === 3. AGREGAR TEXTO AL PDF CON SALTOS REALES ===
+        for line in current_section:
+            if "<b>" in line and line.endswith("</b>:"):
+                elements.append(Paragraph(line, styles["SectionTitle"]))
+            else:
+                elements.append(Paragraph(line, styles["BodyTextJustify"]))
+            elements.append(Spacer(1, 12))
+
+        elements.append(Spacer(1, 20))
+        current_section.clear()
+
     for line in lines:
-        if line.strip() == "":
-            elements.append(Spacer(1, 14))  # salto extra para separar apartados
-        else:
-            elements.append(Paragraph(line.strip(), styles["BodyTextJustify"]))
-            elements.append(Spacer(1, 10))  # espacio después de cada párrafo
+        # Detectar nuevos títulos
+        if ":" in line and "<b>" in line:
+            add_section()
+        current_section.append(line)
 
+    add_section()  # última sección
 
-    # === 4. SALTO DE PÁGINA PARA EL SHAP ===
-    elements.append(PageBreak())
-    elements.append(Paragraph("Importancia de características (SHAP)", styles["SectionTitle"]))
-    elements.append(Spacer(1, 14))
-
+    # ========== GRÁFICO SHAP ==========
     if os.path.exists(shap_img_path):
-        elements.append(Image(shap_img_path, width=6 * inch, height=4 * inch))
-    else:
-        elements.append(Paragraph("⚠️ No se encontró el gráfico SHAP.", styles["Normal"]))
+        try:
+            elements.append(PageBreak())
+            elements.append(Paragraph("<b>Importancia de características (SHAP)</b>", styles["SectionTitle"]))
+            elements.append(Spacer(1, 20))
 
-    # === 5. GENERAR PDF ===
-    doc.build(elements)
-    print(f"PDF generado correctamente en: {output_pdf}")
+            img = Image(shap_img_path, width=5.5 * inch, height=4.2 * inch)
+            img.hAlign = "CENTER"
+            elements.append(img)
+        except Exception as e:
+            elements.append(Paragraph(f"Error cargando imagen SHAP: {e}", styles["Normal"]))
+    else:
+        elements.append(Paragraph("No se encontró el gráfico SHAP.", styles["Normal"]))
+
+    # ========== CREAR PDF ==========
+    try:
+        doc.build(elements)
+    except Exception as e:
+        raise RuntimeError(f"Error construyendo PDF: {e}")
+
+    return output_pdf

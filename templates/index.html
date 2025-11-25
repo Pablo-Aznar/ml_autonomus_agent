@@ -1,40 +1,141 @@
 <!-- templates/index.html -->
 <!doctype html>
-<html>
+<html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <title>ML Autonomous Agent — Web UI (MVP)</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 30px; }
-    .card { border: 1px solid #eee; padding: 18px; border-radius: 8px; max-width: 800px; }
-    input[type=file] { display:block; margin-bottom:10px; }
-    .jobs { margin-top:20px; }
-    a.job { display:block; margin-bottom:6px; }
-  </style>
+    <meta charset="UTF-8">
+    <title>ML Autonomous Agent — Web UI (MVP)</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Inter", Arial, sans-serif;
+            background: linear-gradient(135deg, #6b73ff 0%, #000dff 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 900px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 18px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 35px;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        h3 {
+            margin-top: 0;
+            font-size: 22px;
+            font-weight: 700;
+            color: #000dff;
+        }
+
+        label {
+            font-weight: 600;
+        }
+
+        input[type="file"],
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            margin-bottom: 18px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+
+        button {
+            background: #000dff;
+            color: white;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 17px;
+            font-weight: 600;
+            width: 100%;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #3946ff;
+        }
+
+        .job {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #000dff;
+            text-decoration: none;
+        }
+
+        .job:hover {
+            text-decoration: underline;
+        }
+
+        .no-jobs {
+            color: #666;
+        }
+    </style>
 </head>
+
 <body>
-  <h1>ML Autonomous Agent — MVP</h1>
+<div class="container">
 
-  <div class="card">
-    <h3>1) Subir dataset CSV</h3>
-    <form action="/start" enctype="multipart/form-data" method="post">
-      <label>Archivo CSV: <input name="file" type="file" accept=".csv" required></label>
-      <br/>
-      <label>Variable objetivo (target): <input name="target" type="text" placeholder="e.g. income or quality" required></label>
-      <br/><br/>
-      <button type="submit">Iniciar pipeline</button>
-    </form>
-  </div>
+    <h1>ML Autonomous Agent — MVP</h1>
 
-  <div class="card jobs">
-    <h3>Jobs recientes</h3>
-    {% if jobs %}
-      {% for id, job in jobs.items() %}
-        <a class="job" href="/status/{{id}}">Job {{id}} — {{ job.status }}</a>
-      {% endfor %}
-    {% else %}
-      <p>No hay jobs todavía.</p>
-    {% endif %}
-  </div>
+    <!-- 🔹 CARD 1: SUBIDA DE DATASET -->
+    <div class="card">
+        <h3>1) Subir dataset CSV</h3>
+
+        <form action="/start" enctype="multipart/form-data" method="post">
+            <label>Archivo CSV:</label>
+            <input name="file" type="file" accept=".csv" required>
+
+            <label>Variable objetivo (target):</label>
+            <input name="target" type="text" placeholder="Ej: income, quality, HeartDisease..." required>
+
+            <button type="submit">Iniciar pipeline</button>
+        </form>
+    </div>
+
+    <!-- 🔹 CARD 2: JOBS RECIENTES -->
+    <div class="card">
+        <h3>Jobs recientes</h3>
+
+        {% if jobs %}
+            {% for id, job in jobs.items() %}
+                <a class="job" href="/status/{{id}}">Job {{id}} — {{ job.status }}</a>
+            {% endfor %}
+        {% else %}
+            <p class="no-jobs">No hay jobs todavía.</p>
+        {% endif %}
+    </div>
+
+</div>
 </body>
 </html>

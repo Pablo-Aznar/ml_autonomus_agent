@@ -53,7 +53,11 @@ def load_user_dataset(path: str):
         .str.lower()
         .str.replace(" +", "_", regex=True)
     )
-
+    print('Dataset')
+    print("\n📥 Dataset cargado correctamente.")
+    print(f"📊 Dimensiones del dataset: {df.shape[0]} filas × {df.shape[1]} columnas")
+    print("\n👀 Primeras 5 filas del dataset:")
+    print(df.head())
     print("\n🔍 Columnas detectadas tras normalización:")
     print(df.columns.tolist())
 
@@ -66,9 +70,6 @@ def generate_eda_report(df: pd.DataFrame, output_html: str = 'reports/EDA_report
     print('Generando EDA automático con ydata-profiling...')
     profile = ProfileReport(df, title='EDA Automático - ML_autonomus_agent', explorative=True)
     profile.to_file(output_html)
-    print(f'EDA guardado en {output_html}')
+    print('EDA automático generado correctamente')
+    #print(f'EDA guardado en {output_html}')
     return output_html
-
-# Abrir html en servidor local para visualizar todos los desplegable
-# python -m http.server 8000
-# http://localhost:8000/reports/EDA_report.html
