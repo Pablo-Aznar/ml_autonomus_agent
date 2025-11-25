@@ -6,8 +6,6 @@ import chardet
 def detect_problem_type(y: pd.Series) -> str:
     """
     Detecta automáticamente si el problema es 'regression' o 'classification'.
-    Regresión si la variable objetivo es numérica y tiene más de 20 valores únicos.
-    Clasificación si la variable es objet o tiene pocos valores únicos (<=20).
     """
     if pd.api.types.is_numeric_dtype(y):
         if y.nunique() > 20:
@@ -60,7 +58,6 @@ def load_user_dataset(path: str):
     print(df.columns.tolist())
 
     return df
-
 
 
 # 3) EDA Automático (ydata-profiling)

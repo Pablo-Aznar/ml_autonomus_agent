@@ -8,10 +8,8 @@ OpenAI.api_key = os.getenv('OPENAI_API_KEY')
 if not OpenAI.api_key:
     raise ValueError('No se encontró OPENAI_API_KEY en el archivo .env')
 
-
 def generate_text_report_openai(model_name, metrics, shap_text, eda_path, problem_type, models):
     client = OpenAI()
-
     prompt = f"""
     Eres un experto en ciencia de datos. Redacta un informe técnico claro y profesional con el siguiente contenido:
 

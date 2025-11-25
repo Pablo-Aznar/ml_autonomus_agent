@@ -34,9 +34,7 @@ def run_ml_pipeline_auto(df, target_column, problem_type=None):
     X = df.drop(columns=[target_column])
     y = df[target_column]
 
-    # --------------------------------------------------------
     # Codificación correcta del target categórico
-    # --------------------------------------------------------
     label_encoder = None
     # CODIFICACIÓN OBLIGATORIA DE ETIQUETAS PARA CLASIFICACIÓN
     if problem_type == "classification":

@@ -1,4 +1,4 @@
-# utils/explainability.py → VERSIÓN FINAL 2025 (FUNCIONA CON TODO)
+# utils/explainability.py 
 import shap
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +16,7 @@ def compute_shap(model, X_proc_df: pd.DataFrame, output_path: str = "graphics/sh
     X_sample = X_proc_df.sample(n=min(1000, len(X_proc_df)), random_state=21)
     
     try:
-        # OPCIÓN 1: shap.Explainer con masker explícito (LA QUE FUNCIONA EN 2025)
+        # OPCIÓN 1: shap.Explainer con masker explícito
         explainer = shap.Explainer(
             model, 
             masker=X_sample, 

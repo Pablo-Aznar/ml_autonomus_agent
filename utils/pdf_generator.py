@@ -73,7 +73,6 @@ def generate_pdf_report(text: str, shap_img_path: str, model_name: str, metrics:
     else:
         elements.append(Paragraph("⚠️ No se encontró el gráfico SHAP.", styles["Normal"]))
 
-
     # === 5. GENERAR PDF ===
     doc.build(elements)
     print(f"PDF generado correctamente en: {output_pdf}")

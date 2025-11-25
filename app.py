@@ -1,4 +1,4 @@
-# web_app.py
+# app.py
 import os
 import uuid
 import shutil
@@ -8,14 +8,14 @@ from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
-# import your utils
+# importar utils
 from utils.dataset_loader_EDA_generator import load_user_dataset, generate_eda_report, detect_problem_type
 from utils.automl_pipeline import run_ml_pipeline_auto
 from utils.explainability import compute_shap
 from utils.text_generator import generate_text_report_openai
 from utils.pdf_generator import generate_pdf_report
 
-# Config
+# Configuración
 ROOT = Path(__file__).resolve().parent
 UPLOAD_DIR = ROOT / "data" / "raw"
 REPORTS_DIR = ROOT / "reports"
@@ -32,7 +32,7 @@ templates = Jinja2Templates(directory=str(ROOT / "templates"))
 app.mount("/reports", StaticFiles(directory=str(REPORTS_DIR)), name="reports")
 app.mount("/graphics", StaticFiles(directory=str(GRAPHICS_DIR)), name="graphics")
 
-# In-memory job store (MVP). For production use Redis / DB.
+# In-memory job store (MVP)
 JOBS = {}  # job_id -> {status, messages, paths...}
 
 def run_pipeline_job(job_id: str, csv_path: str, target_column: str):
@@ -69,14 +69,13 @@ def run_pipeline_job(job_id: str, csv_path: str, target_column: str):
         compute_shap(best_model, X_test, output_path=str(shap_path))
 
         JOBS[job_id]["messages"].append("Generando texto con OpenAI...")
-        # pass models dictionary - your text_generator expects it
         report_text = generate_text_report_openai(best_model_name, best_metrics, "Ver SHAP en el informe.", str(eda_path), detect_problem_type(df[target_column]), models)
 
         JOBS[job_id]["messages"].append("Generando PDF...")
         pdf_path = REPORTS_DIR / f"ml_report_{job_id}.pdf"
         generate_pdf_report(report_text, str(shap_path), best_model_name, best_metrics, detect_problem_type(df[target_column]), output_pdf=str(pdf_path))
 
-        # Save outputs in job
+        # Guardar salidas en job
         JOBS[job_id]["status"] = "completed"
         JOBS[job_id]["outputs"] = {
             "eda": str(eda_path),
@@ -108,16 +107,16 @@ async def start_pipeline(request: Request, background_tasks: BackgroundTasks,
     job_id = uuid.uuid4().hex[:10]
     JOBS[job_id] = {"status": "queued", "messages": [], "outputs": {}}
 
-    # save uploaded file
+    # guardar archivo actualizado
     dest = UPLOAD_DIR / f"{job_id}_{file.filename}"
     with dest.open("wb") as f:
         shutil.copyfileobj(file.file, f)
 
     JOBS[job_id]["messages"].append(f"Dataset guardado: {dest}")
-    # launch background work
+    # iniciar trabajo en segundo plano
     background_tasks.add_task(run_pipeline_job, job_id, str(dest), target)
     
-    # Redirect to job status page
+    # Redirigir a la página de estado del trabajo
     return RedirectResponse(url=f"/status/{job_id}", status_code=303)
 
 @app.get("/status/{job_id}", response_class=HTMLResponse)
@@ -127,7 +126,7 @@ def job_status(request: Request, job_id: str):
         return templates.TemplateResponse("status.html", {"request": request, "job_id": job_id, "job": None})
     return templates.TemplateResponse("status.html", {"request": request, "job_id": job_id, "job": job})
 
-# download endpoints
+# descargar endpoints
 @app.get("/download/pdf/{job_id}")
 def download_pdf(job_id: str):
     job = JOBS.get(job_id)
@@ -150,4 +149,4 @@ def download_shap(job_id: str):
     return FileResponse(job["outputs"]["shap"], media_type="image/png", filename=f"shap_{job_id}.png")
 
 
-# uvicorn web_app:app --reload --port 8000
+# uvicorn app:app --reload --port 8000
