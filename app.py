@@ -1,4 +1,4 @@
-# app.py — VERSIÓN FINAL DEFINITIVA 2025 — TODO FUNCIONA AL 100%
+# app.py
 import uuid
 import shutil
 import time
@@ -244,7 +244,7 @@ async def download_pdf(job_id: str):
     )
 # =======================================================================
 
-# (Opcional) Si algún día quieres descargar el SHAP también:
+# (Opcional) 
 # @app.get("/download/shap/{job_id}")
 # async def download_shap(job_id: str):
 #     job = JOBS.get(job_id)
