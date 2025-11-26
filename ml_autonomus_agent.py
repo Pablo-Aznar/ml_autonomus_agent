@@ -10,9 +10,10 @@ def main():
 
     data_path = input("Ruta del CSV: ").strip()
     target_column = input("Variable objetivo: ").strip()
-
+    dataset_name = os.path.basename(data_path)
     df = load_user_dataset(data_path)
     eda_path = generate_eda_report(df)
+    problem_type = detect_problem_type(df[target_column])
 
     best_model_name, best_metrics, best_model, preprocessing, X_train, X_test, y_test, models = (
         run_ml_pipeline_auto(df, target_column))
@@ -25,15 +26,17 @@ def main():
         best_metrics,
         shap_text,
         eda_path,
-        detect_problem_type(df[target_column]),
-        models)
-
+        problem_type=problem_type,
+        models=models)
+    
     generate_pdf_report(
         report_text,
         shap_img,
         best_model_name,
         best_metrics,
-        detect_problem_type(df[target_column]))
+        problem_type=problem_type,
+        dataset_name=dataset_name,
+        target=target_column)
 
 if __name__ == "__main__":
     import uvicorn
