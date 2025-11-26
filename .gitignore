@@ -26,10 +26,7 @@ reports/
 tests/
 
 # === CARPETA DEL HUGGING FACE SPACE ===
-# → La mantenemos en local y VS Code para hacer push al Space
-# → Pero NUNCA se sube al repo público de GitHub
 ml-autonomous-agent/
-ml_autonomous_agent/
 hf-space/
 *.space/
 

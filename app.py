@@ -143,10 +143,12 @@ def run_pipeline_job(job_id: str, csv_path: str, target_column: str):
         for i in range(1, 101, 12):
             time.sleep(0.3)
             job["messages"][-1] = progress_bar(5, i, "Renderizando PDF...")
+        dataset_name = job.get("dataset_name", "dataset")
+        target_name  = job.get("target", target_column)
         generate_pdf_report(
             report_text, str(shap_path), best_model_name,
             best_metrics, detect_problem_type(df[target]),
-            output_pdf=str(pdf_path)
+            dataset_name,target_name,output_pdf=str(pdf_path)
         )
 
         # ÉXITO
@@ -172,6 +174,17 @@ def run_pipeline_job(job_id: str, csv_path: str, target_column: str):
 
 # ====================== RUTAS ======================
 @app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    """
+    Página principal con formulario para subir CSV y mostrar jobs recientes.
+    """
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "jobs": JOBS  # Pasamos los jobs actuales a la plantilla
+        }
+    )
 @app.get("/start", response_class=HTMLResponse)
 async def root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -185,11 +198,14 @@ async def start_pipeline(
     target: str = Form(...)
 ):
     job_id = uuid.uuid4().hex[:10]
+    
     JOBS[job_id] = {
         "status": "queued",
         "messages": [f"Job creado: {job_id}"],
         "detailed_log": [],
-        "outputs": {}
+        "outputs": {},
+        "dataset_name": file.filename,
+        "target": target
     }
 
     dest = UPLOAD_DIR / f"{job_id}_{file.filename}"

@@ -18,9 +18,11 @@ def build_preprocessing_pipeline(df: pd.DataFrame, target_column: str):
     X = df.drop(columns=[target_column])
     num_cols = X.select_dtypes(include=['number']).columns.tolist()
     cat_cols = X.select_dtypes(include=['object', 'category', 'bool']).columns.tolist()
-
     low_card_cat = [c for c in cat_cols if df[c].nunique() <= 10]
     high_card_cat = [c for c in cat_cols if df[c].nunique() > 10]
+
+    print(f'Variables numéricas: {num_cols}')
+    print(f'Variables categóricas: {cat_cols}')
 
     numeric_transformer = Pipeline([
         ("imputer", SimpleImputer(strategy="median")),

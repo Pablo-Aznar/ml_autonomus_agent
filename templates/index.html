@@ -85,16 +85,36 @@
             background: #3946ff;
         }
 
+        /* Job general */
         .job {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             font-weight: 600;
-            color: #000dff;
+            padding: 12px;
+            border-radius: 10px;
             text-decoration: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: 0.2s;
         }
 
         .job:hover {
-            text-decoration: underline;
+            transform: translateY(-2px);
+        }
+
+        /* Estado del Job */
+        .running {
+            background: #fff8cc;
+            color: #b38f00;
+        }
+
+        .completed {
+            background: #e7ffe9;
+            color: #1a7f2e;
+        }
+
+        .failed {
+            background: #ffe7e7;
+            color: #b30000;
         }
 
         .no-jobs {
@@ -129,7 +149,10 @@
 
         {% if jobs %}
             {% for id, job in jobs.items() %}
-                <a class="job" href="/status/{{id}}">Job {{id}} — {{ job.status }}</a>
+                <a class="job {{ job.status }}" href="/status/{{id}}">
+                    Job {{id}} — {{ job.status.capitalize() }}
+                    {% if job.dataset_name %} — {{ job.dataset_name }}{% endif %}
+                </a>
             {% endfor %}
         {% else %}
             <p class="no-jobs">No hay jobs todavía.</p>

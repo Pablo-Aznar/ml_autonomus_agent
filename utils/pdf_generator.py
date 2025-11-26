@@ -13,8 +13,9 @@ def generate_pdf_report(
     model_name: str,
     metrics: dict,
     problem_type: str,
-    output_pdf: str = "reports/ml_report.pdf"
-):
+    dataset_name: str,
+    target: str,
+    output_pdf: str = "reports/ml_report.pdf"):
     """
     PDF profesional optimizado (basado en tu versión original):
     - Títulos en negrita (como los genera GPT)
@@ -43,12 +44,15 @@ def generate_pdf_report(
 
     elements = []
 
-    # === PORTADA ===
-    elements.append(Paragraph(f"Informe automático - Modelo: {model_name}", styles["Title"]))
-    elements.append(Spacer(1, 12))
+# === PORTADA ===
+    elements.append(Paragraph("Informe automático", styles["Title"]))
+    elements.append(Spacer(1, 20))
+
+    elements.append(Paragraph(f"<b>Dataset:</b> {dataset_name}", styles["Normal"]))
+    elements.append(Paragraph(f"<b>Variable objetivo:</b> {target}", styles["Normal"]))
     elements.append(Paragraph(f"<b>Tipo de problema:</b> {problem_type.capitalize()}", styles["Normal"]))
-    elements.append(Paragraph(f"<b>Métricas:</b> {metrics}", styles["Normal"]))
-    elements.append(Spacer(1, 30))
+
+    elements.append(Spacer(1, 40))
 
     # === LIMPIEZA DEL TEXTO (MANTENEMOS LA NEGRITA) ===
     clean_text = re.sub(r"\*\*(.*?)\*\*", r"<b>\1</b>", text)      # ** → <b>

@@ -64,7 +64,7 @@ def compute_shap(model, X_proc_df: pd.DataFrame, output_path: str = "graphics/sh
     plt.savefig(output_path, dpi=150, bbox_inches='tight')
     plt.close()
     #print(f"Gráfico SHAP guardado: {output_path}")
-    print("=== FIN AUTO-ML PIPELINE ===\n")
+    #print("=== FIN AUTO-ML PIPELINE ===\n")
 
     # Resumen textual
     mean_abs_shap = np.abs(shap_values).mean(axis=0)
@@ -72,11 +72,14 @@ def compute_shap(model, X_proc_df: pd.DataFrame, output_path: str = "graphics/sh
     top3_features = [X_proc_df.columns[i] for i in top3_idx]
 
     shap_text = (
-        f"Análisis SHAP completado.\n"
+        f"Análisis SHAP completado\n"
         f"Variables más importantes:\n"
         f"1. {top3_features[0]}\n"
         f"2. {top3_features[1]}\n"
         f"3. {top3_features[2]}"
     )
+
+    print(shap_text)
+    print("=== FIN AUTO-ML PIPELINE ===\n")
 
     return shap_text
