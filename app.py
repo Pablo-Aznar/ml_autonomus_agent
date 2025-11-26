@@ -32,7 +32,6 @@ for d in (UPLOAD_DIR, REPORTS_DIR, GRAPHICS_DIR, MODELS_DIR):
 app = FastAPI(title="ML Autonomous Agent - Web UI")
 templates = Jinja2Templates(directory=str(ROOT / "templates"))
 
-# Sirve archivos estáticos directamente
 app.mount("/reports",  StaticFiles(directory=str(REPORTS_DIR)),  name="reports")
 app.mount("/graphics", StaticFiles(directory=str(GRAPHICS_DIR)), name="graphics")
 
@@ -108,7 +107,7 @@ def run_pipeline_job(job_id: str, csv_path: str, target_column: str):
             job["messages"][-1] = progress_bar(1, i, f"Analizando {i}%")
         generate_eda_report(df, output_html=str(eda_path))
 
-        # 2. AutoML (aquí se capturan tus prints bonitos)
+        # 2. AutoML 
         job["messages"][-1] = progress_bar(2, 0)
         (best_model_name, best_metrics, best_model, preprocessing,
          X_train, X_test, y_test, models) = run_ml_pipeline_auto(df, target)
@@ -151,7 +150,6 @@ def run_pipeline_job(job_id: str, csv_path: str, target_column: str):
             dataset_name,target_name,output_pdf=str(pdf_path)
         )
 
-        # ÉXITO
         job["status"] = "completed"
         job["messages"][-1] = progress_bar(6)
         job["messages"].append("¡PIPELINE COMPLETADO CON ÉXITO!")
@@ -247,7 +245,7 @@ def job_status(request: Request, job_id: str):
     )
 
 
-# ====================== DESCARGA DEL PDF (CORREGIDA) ======================
+# ====================== DESCARGA DEL PDF======================
 @app.get("/download/pdf/{job_id}")
 async def download_pdf(job_id: str):
     job = JOBS.get(job_id)
@@ -258,12 +256,4 @@ async def download_pdf(job_id: str):
         media_type="application/pdf",
         filename=f"ML_Report_{job_id}.pdf"
     )
-# =======================================================================
 
-# (Opcional) 
-# @app.get("/download/shap/{job_id}")
-# async def download_shap(job_id: str):
-#     job = JOBS.get(job_id)
-#     if not job or "shap" not in job.get("outputs", {}):
-#         return JSONResponse(status_code=404, content={"error": "SHAP no disponible"})
-#     return FileResponse(job["outputs"]["shap"], media_type="image/png")

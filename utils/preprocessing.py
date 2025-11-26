@@ -11,7 +11,6 @@ def build_preprocessing_pipeline(df: pd.DataFrame, target_column: str):
     Construye un ColumnTransformer que:
     - Imputa y escala numéricas
     - Imputa y codifica categóricas (OneHot si cardinalidad baja, Ordinal si alta)
-    - Para texto se deja pasar (opcion Tfidf)
     Retorna: preprocessing (ColumnTransformer), lista_feature_names 
     """
 

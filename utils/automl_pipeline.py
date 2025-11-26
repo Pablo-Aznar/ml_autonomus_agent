@@ -45,7 +45,7 @@ def run_ml_pipeline_auto(df, target_column, problem_type=None):
         print(f"   Clases originales: {label_encoder.classes_}")
         print(f"   Clases codificadas: {np.unique(y)}")
 
-    # 4) Train/test split
+    # 4) split
     X_train, X_test, y_train, y_test = train_test_split(
         X, y,
         test_size=0.2,

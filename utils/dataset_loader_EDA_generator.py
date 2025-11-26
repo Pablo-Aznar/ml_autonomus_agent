@@ -4,9 +4,6 @@ import chardet
 
 # 1) Detecta el tipo de problema
 def detect_problem_type(y: pd.Series) -> str:
-    """
-    Detecta automáticamente si el problema es 'regression' o 'classification'.
-    """
     if pd.api.types.is_numeric_dtype(y):
         if y.nunique() > 20:
             return 'regression'
@@ -16,23 +13,12 @@ def detect_problem_type(y: pd.Series) -> str:
         return 'classification'
 
 
-# 2) Carga del DATASET
+# 2) Carga del DATASET - Carga un CSV del usuario limpiando los nombres de columnas
 def load_user_dataset(path: str):
-    """
-    Carga un CSV del usuario limpiando los nombres de columnas:
-    - Detecta encoding automáticamente
-    - Intenta detectar separador automáticamente (para evitar 1 sola columna)
-    - Elimina BOM/UTF-8
-    - Convierte columnas a minúsculas
-    - Quita espacios y caracteres raros
-    """
-
     # Detectar encoding automáticamente
     with open(path, "rb") as f:
         raw = f.read()
         enc = chardet.detect(raw)["encoding"]
-
-    # --- Intento inteligente de carga ---
     try:
         # Detectar automáticamente separador
         df = pd.read_csv(path, encoding=enc, sep=None, engine="python")
@@ -70,5 +56,4 @@ def generate_eda_report(df: pd.DataFrame, output_html: str = 'reports/EDA_report
     profile = ProfileReport(df, title='EDA Automático - ML_autonomus_agent', explorative=True)
     profile.to_file(output_html)
     print('EDA automático generado correctamente')
-    #print(f'EDA guardado en {output_html}')
     return output_html

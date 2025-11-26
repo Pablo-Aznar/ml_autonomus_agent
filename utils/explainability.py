@@ -29,7 +29,7 @@ def compute_shap(model, X_proc_df: pd.DataFrame, output_path: str = "graphics/sh
     except Exception as e1:
         print(f"Explainer falló, intentando con LinearExplainer para XGBoost...")
         try:
-            # OPCIÓN 2: LinearExplainer (funciona perfecto con XGBoost en clasificación)
+            # OPCIÓN 2: LinearExplainer
             explainer = shap.LinearExplainer(model, X_sample)
             shap_values = explainer(X_sample)
             print("SHAP calculado con LinearExplainer")
@@ -63,8 +63,6 @@ def compute_shap(model, X_proc_df: pd.DataFrame, output_path: str = "graphics/sh
     plt.tight_layout()
     plt.savefig(output_path, dpi=150, bbox_inches='tight')
     plt.close()
-    #print(f"Gráfico SHAP guardado: {output_path}")
-    #print("=== FIN AUTO-ML PIPELINE ===\n")
 
     # Resumen textual
     mean_abs_shap = np.abs(shap_values).mean(axis=0)

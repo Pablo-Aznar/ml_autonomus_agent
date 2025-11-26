@@ -16,17 +16,10 @@ def generate_pdf_report(
     dataset_name: str,
     target: str,
     output_pdf: str = "reports/ml_report.pdf"):
-    """
-    PDF profesional optimizado (basado en tu versión original):
-    - Títulos en negrita (como los genera GPT)
-    - Cada sección completa en una sola página
-    - Si un título quedaría huérfano → salta a página nueva
-    """
 
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
     doc = SimpleDocTemplate(output_pdf, pagesize=A4, topMargin=0.8*inch, bottomMargin=0.8*inch)
 
-    # === TUS ESTILOS ORIGINALES (sin conflictos) ===
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(
         name="BodyTextJustify",
@@ -44,7 +37,7 @@ def generate_pdf_report(
 
     elements = []
 
-# === PORTADA ===
+    # === PORTADA ===
     elements.append(Paragraph("Informe automático", styles["Title"]))
     elements.append(Spacer(1, 20))
 
@@ -60,7 +53,7 @@ def generate_pdf_report(
     clean_text = re.sub(r"#+\s*", "", clean_text)                 # # Título → solo texto
     lines = [line.strip() for line in clean_text.split("\n") if line.strip()]
 
-    # === AGRUPAR POR SECCIONES (mantener todo junto) ===
+    # === AGRUPAR POR SECCIONES ===
     current_section = []
 
     def add_section():
