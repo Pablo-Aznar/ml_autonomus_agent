@@ -12,7 +12,7 @@ from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse, JSON
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
-# Tus funciones
+# Funciones de utils
 from utils.dataset_loader_EDA_generator import load_user_dataset, generate_eda_report, detect_problem_type
 from utils.automl_pipeline import run_ml_pipeline_auto
 from utils.explainability import compute_shap
