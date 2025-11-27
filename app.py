@@ -38,7 +38,7 @@ app.mount("/graphics", StaticFiles(directory=str(GRAPHICS_DIR)), name="graphics"
 JOBS: dict[str, dict] = {}
 
 
-# ====================== CAPTURA SOLO TUS PRINTS ==============
+# ====================== CAPTURA SOLO TUS PRINTS =============
 class CleanPrintCapture:
     def __init__(self):
         self.old_stdout = sys.stdout
@@ -51,10 +51,10 @@ class CleanPrintCapture:
     def stop(self):
         sys.stdout = __import__("sys")
         sys.stdout = self.old_stdout
-# ==============================================================
+# =============================================================
 
 
-# ====================== BARRA DE PROGRESO =====================
+# ====================== BARRA DE PROGRESO ====================
 STEPS = [
     ("Cargando dataset...", 5),
     ("Generando EDA...", 20),
@@ -72,7 +72,7 @@ def progress_bar(step: int, subprogress: int = 0, status: str = "") -> str:
     empty  = "░" * (25 - len(filled))
     name   = STEPS[step][0] if step < len(STEPS) else "¡Completado!"
     return f"[{filled}{empty}] {percent:>3}% → {name} {status}".strip()
-# =================================================================
+# ================================================================
 
 
 def run_pipeline_job(job_id: str, csv_path: str, target_column: str):
