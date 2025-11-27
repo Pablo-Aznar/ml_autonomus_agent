@@ -38,7 +38,7 @@ app.mount("/graphics", StaticFiles(directory=str(GRAPHICS_DIR)), name="graphics"
 JOBS: dict[str, dict] = {}
 
 
-# ====================== CAPTURA SOLO TUS PRINTS ====================
+# ====================== CAPTURA SOLO TUS PRINTS ===============
 class CleanPrintCapture:
     def __init__(self):
         self.old_stdout = sys.stdout
@@ -51,7 +51,7 @@ class CleanPrintCapture:
     def stop(self):
         sys.stdout = __import__("sys")
         sys.stdout = self.old_stdout
-# ====================================================================
+# ===============================================================
 
 
 # ====================== BARRA DE PROGRESO ======================
